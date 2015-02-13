@@ -1,7 +1,16 @@
-Effects of Expansion Rate on MHD Wave Generation from a Logarithmic Spiral Photospheric Driver
-==============================================================================================
+Flux Surface Analysis
+=====================
 
-This is a super speedy paper!!
+This repository contains the core code used to run parameter studies
+using SAC. Primarily, it comprises: the SAC code, as a git
+submodule in the `sac` directory; A configration system and various
+helper scripts in `scripts` to manage data and parameters; and the
+flux surface analysis code and descriptive IPython notebooks in the
+`analysis` directory.
+
+The first stop on using this repository should be the top level
+`configure.py` and `run.py` scripts which can be used to set up and
+execute various parts of the code.
 
 Technical Notes
 ---------------
