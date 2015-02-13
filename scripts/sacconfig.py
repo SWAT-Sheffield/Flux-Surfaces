@@ -165,7 +165,7 @@ class SACConfig(object):
 #==============================================================================
     @property
     def out_dir(self):
-        self._out_dir = self._get_value('data', 'out_dir')
+        self._out_dir = os.path.realpath(self._get_value('data', 'out_dir'))
         return self._out_dir
 
     @out_dir.setter
@@ -175,7 +175,7 @@ class SACConfig(object):
 
     @property
     def data_dir(self):
-        data_dir = self._get_value('data', 'data_dir')
+        data_dir = os.path.realpath(self._get_value('data', 'data_dir'))
         return os.path.join(data_dir, self.get_identifier())
 
     @data_dir.setter
@@ -184,7 +184,7 @@ class SACConfig(object):
 
     @property
     def gdf_dir(self):
-        gdf_dir = self._get_value('data', 'gdf_dir')
+        gdf_dir = os.path.realpath(self._get_value('data', 'gdf_dir'))
         return os.path.join(gdf_dir, self.get_identifier())
 
     @gdf_dir.setter
@@ -193,11 +193,19 @@ class SACConfig(object):
 
     @property
     def fig_dir(self):
-        return self._get_value('data', 'fig_dir')
+        return os.path.realpath(self._get_value('data', 'fig_dir'))
 
     @fig_dir.setter
     def fig_dir(self, value):
         self._set_value('data', 'fig_dir', value)
+
+    @property
+    def ini_dir(self):
+        return os.path.realpath(self._get_value('data', 'ini_dir'))
+
+    @ini_dir.setter
+    def ini_dir(self, value):
+        self._set_value('data', 'ini_dir', value)
 
 #==============================================================================
 #   Utils
@@ -256,6 +264,7 @@ class SACConfig(object):
             print "-"*79
             print "data:"
             print "-"*79
+            print "ini_dir", self.ini_dir
             print "out_dir:", self.out_dir
             print "data_dir", self.data_dir
             print "gdf_dir", self.gdf_dir

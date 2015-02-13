@@ -6,7 +6,7 @@ Usage:
     configure.py set SAC [--compiler=<compiler>] [--compiler_flags=<flg>] [--vac_modules=<mod>] [--runtime=<s>] [--mpi_config=<cfg>] [--varnames=<s>]
     configure.py set driver [--driver=<driver>] [--period=<s>] [--exp_fac=<exp>] [--amp=<amp_str>] [--fort_amp=<fort_amp>]
     configure.py set analysis [--tube_radii=<radii>]
-    configure.py set data [--out_dir=<dir>] [--data_dir=<dir>] [--gdf_dir=<dir>]
+    configure.py set data [--ini_dir=<dir>] [--out_dir=<dir>] [--data_dir=<dir>] [--gdf_dir=<dir>]
     configure.py print [<section>]
     configure.py compile SAC [--clean]
 
@@ -23,6 +23,7 @@ Options:
     --amplitude=AMP  String representation of the driver ampliude
     --fort_amp=FAMP  FORTRAN code to calculate the driver amplitude
     --tube-radii=R  A list of flux surface radii to compute analysis for
+    --ini_dir=DIR The data directory where the initial conditions are located.
     --out_dir=DIR  SAC output data directory
     --data_dir=DIR  ?
     --gdf_dir=DIR  The dir for GDF output, identifier will be appended as a dir
@@ -76,14 +77,42 @@ tube_radii = cfg.tube_radii
 identifier = cfg.get_identifier()
 job_name = "sac_%s_%s"%(driver,period)
 
+def sac_path(path):
+    return os.path.join(os.path.realpath('./sac/sac/'), path)
+
+def check_file(path):
+    # Make sure the current vac.par is a symlink
+    path = sac_path(path)
+    if os.path.isfile(path) or os.path.islink(path):
+        if os.path.islink(path):
+            os.remove(path)
+        else:
+            raise TypeError("{} is not a symlink, cannot safely remove".format(path))
+
 if arguments['compile'] and arguments['SAC']:
+    # Get the template vac.par into place
+    check_file('vac.par')
+    os.symlink(os.path.realpath('./scripts/vac_config.par'),
+               os.path.realpath(sac_path('vac.par')))
+
+    check_file('src/vacusrpar.t.Slog')
+    os.symlink(os.path.realpath('./scripts/vacusrpar.t.Slog'),
+               sac_path('src/vacusrpar.t.Slog'))
+
+    check_file('src/vacusr.t.Slog')
+    os.symlink(os.path.realpath('./scripts/vacusr.t.Slog'),
+               sac_path('src/vacusr.t.Slog'))
+
     #==============================================================================
     # Process vac.par
     #==============================================================================
-    f = open('sac/vac.par', 'r')
+    f = open(sac_path('vac.par'), 'r')
     f_lines = f.readlines()
 
     for i,line in enumerate(f_lines):
+        if line.strip().startswith("filenameini="):
+            f_lines[i] = '\t' + "filenameini='" + os.path.join(cfg.ini_dir,
+                                        "3D_tube_128_128_128.ini'\n")
         if line.strip().startswith("filename="):
             f_lines[i] = '\t' + "filename='" + os.path.join(out_dir,
                                     "3D_tube128_%s.log'\n"%identifier)
@@ -97,14 +126,14 @@ if arguments['compile'] and arguments['SAC']:
         f_lines[i] = f_lines[i].encode('ascii')
 
     #Truncate and overwrite
-    f = open('sac/vac.par', 'w')
+    f = open(sac_path('vac.par'), 'w')
     f.writelines(f_lines)
     f.close()
 
     #==============================================================================
     # Process vacusr.t.Slog
     #==============================================================================
-    f = open('sac/src/vacusr.t.Slog', 'r')
+    f = open(sac_path('src/vacusr.t.Slog'), 'r')
     f_lines = f.readlines()
 
     for i,line in enumerate(f_lines):
@@ -117,7 +146,7 @@ if arguments['compile'] and arguments['SAC']:
     f.close()
 
     #Truncate and overwrite
-    f = open('sac/src/vacusr.t.Slog', 'w')
+    f = open(sac_path('src/vacusr.t.Slog'), 'w')
     f.writelines(f_lines)
     f.close()
 
@@ -125,9 +154,10 @@ if arguments['compile'] and arguments['SAC']:
     # Compile Things
     #==============================================================================
     #Compile VAC
-    os.chdir("sac/sac/src")
+    os.chdir(sac_path("src"))
+    os.system('./setvac -u=Slog -p=mhd')
     if arguments['--clean']:
         os.system('./sac_fabricate.py --clean')
     else:
         os.system('./sac_fabricate.py')
-    os.chdir("../..")
+    os.chdir(os.path.realpath('.'))
