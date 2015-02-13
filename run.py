@@ -41,10 +41,6 @@ os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 arguments = docopt.docopt(__doc__, version='1.0.0')
 
-#Fix rerun bug
-if arguments['--rerun'] is None:
-    arguments['--rerun'] = 'modified'
-
 #MPI Exec function
 def mpi_exec(arguments, command):
     if not arguments['--mpi']:
@@ -94,12 +90,13 @@ if arguments['notebook'] or arguments['SAC'] == 'notebook':
 
 #Download data
 if arguments['download'] or arguments['SAC'] == 'download':
-    ini_data_url = 'http://work.cadair.com/3D_tube_128_128_128.ini.bz'
+    ini_data_url = 'http://files.figshare.com/1905552/3D_tube_128_128_128.ini.bz2'
 
     if arguments['ini']:
         data_url = ini_data_url
         filename = 'data/3D_tube_128_128_128.ini'
     else:
+        print "No Download Specified. Try run.py download ini"
         sys.exit()
 
     CHUNK_SIZE = 1024 * 1024 # 1MB
