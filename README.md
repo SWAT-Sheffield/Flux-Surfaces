@@ -19,7 +19,7 @@ This code uses initial condition data in binary form, the
 mathematics in http://arxiv.org/abs/1305.4788 could be used to
 recreate something with very similar properties, the implementation
 of those algorithms is under development and will be included in
-(pysac)[https://github.com/SWAT-Sheffield/pysac].
+[pysac](https://github.com/SWAT-Sheffield/pysac).
 
 You can download the binary version of the initial conditions from
 [FigShare](http://figshare.com/articles/SAC_Magnetohydrostatic_Background_Conditions/1308563)
