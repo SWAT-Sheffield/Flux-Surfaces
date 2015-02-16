@@ -1,198 +1,261 @@
-  !##############################################################################
-  ! module vacusr - uniform spiral ! setvac -d=22 -g=204,204 -p=hdadiab -u=sim1
-  
-  
-  INCLUDE:vacusr.gravity.t
-  INCLUDE:vacusr.viscosity.t
+!##############################################################################
+! module vacusr - nul
+!##############################################################################
 
-  !=============================================================================
-  SUBROUTINE specialini(ix^L,w)
-
-    INCLUDE 'vacdef.f'
-
-    INTEGER:: ix^L
-    DOUBLE PRECISION:: w(ixG^T,1:nw)
-
-    RETURN
-  END SUBROUTINE specialini
-
-
-  !=============================================================================
-  SUBROUTINE specialsource(qdt,ixI^L,ixO^L,iws,qtC,wCT,qt,w)
-
-    INCLUDE 'vacdef.f'
-
-    INTEGER:: ixI^L,ixO^L,iws(niw_)
-    DOUBLE PRECISION:: qdt,qtC,qt,wCT(ixG^T,nw),w(ixG^T,nw) !Intent(IN)
-
-    INTEGER:: iw
-    INTEGER:: ix_1,ix_2,ix_3
-
-    DOUBLE PRECISION:: s_period, xc1, xc2, xc3, xxmax, yymax, zzmax
-    DOUBLE PRECISION:: xc1Mm, xc2Mm, xc3Mm
-    DOUBLE PRECISION:: xx, yy, zz
-    DOUBLE PRECISION:: vvx(ixG^T), vvy(ixG^T), vvz(ixG^T)
-    DOUBLE PRECISION:: AA, B, ux, uy, phi, theta
-    DOUBLE PRECISION:: delta_z, delta_x, delta_y, exp_x, exp_y, exp_z, exp_xyz, tdep
-    !-----------------------------------------------------------------------------
-
-    eqpar(eta_)=0.d0
-    eqpar(nu_)=1.0d0
-    
-    CALL addsource_grav(qdt,ixI^L,ixO^L,iws,qtC,wCT,qt,w)
-    
-    IF(ABS(eqpar(nu_))>smalldouble)&
-         CALL addsource_visc(qdt,ixI^L,ixO^L,iws,qtC,wCT,qt,w)
-
-    vvx(ixG^T) = 0.d0
-    vvy(ixG^T) = 0.d0
-    vvz(ixG^T) = 0.d0
-
-
-    xc1Mm=0.1   !Mm        z axis
-    xc2Mm=1.0 !0.99d0  !Mm        x axis
-    xc3Mm=1.0 !0.99d0  !Mm        y axis
-
-
-    xc1=xc1Mm*1.0d6  !m        z axis
-    xc2=xc2Mm*1.0d6  !m        x axis
-    xc3=xc3Mm*1.0d6  !m        y axis
-
-    xxmax=2.d6
-    yymax=2.d6
-    zzmax=1.6d6
-    
-    delta_z=0.05d6
-    delta_x=0.1d6
-    delta_y=0.1d6
-
-    !### AMPLITUDE ###
-    AA = 20.d0 / SQRT(3.d0)
-    !### EXP_FAC ###
-    B = 0.015
-    !### PERIOD ###
-    s_period = 180.0
-
-    tdep=SIN(qt*2.d0*pi/s_period)!*EXP(-(qt/(4.d0 * s_period))**2.d0) 
-    {^IFMPI IF (ipe.EQ.0)} PRINT*, "tdep==",tdep
-    !tdep=sin(qt*2.d0*pi/s_period) 
-
-    !tdep=1.d0 ! continious rotation
-
-    DO ix_1=ixImin1,ixImax1
-       DO ix_2=ixImin2,ixImax2
-          DO ix_3=ixImin3,ixImax3
-
-
-             xx=x(ix_1,ix_2,ix_3,2)-xc2
-             yy=x(ix_1,ix_2,ix_3,3)-xc3
-             zz=x(ix_1,ix_2,ix_3,1)-xc1  
-             
-             exp_z = EXP(-zz**2.d0/(delta_z**2.d0))
-             exp_x = EXP(-xx**2.d0/(delta_x**2.d0))
-             exp_y = EXP(-yy**2.d0/(delta_y**2.d0))
-
-             exp_xyz=exp_x*exp_y*exp_z
-             
-             theta = ATAN2(yy,xx)
-             phi = ATAN2(1.d0,B)
-             
-
-             ux = COS(theta + phi)
-             uy =  SIN(theta + phi)
-             
-             vvx(ix_1,ix_2,ix_3) = (ux / SQRT(ux**2 + uy**2)) * exp_xyz * tdep * AA
-             vvy(ix_1,ix_2,ix_3) = (uy / SQRT(ux**2 + uy**2)) * exp_xyz * tdep * AA
-
-          ENDDO
-       ENDDO
-    ENDDO
-
-
-    DO ix_1=ixImin1,ixImax1
-       DO ix_2=ixImin2,ixImax2
-          DO ix_3=ixImin3,ixImax3
-             
-            !w(ix_1,ix_2,ix_3,m1_)=w(ix_1,ix_2,ix_3,m1_)+(w(ix_1,ix_2,ix_3,rho_)+w(ix_1,ix_2,ix_3,rhob_))*vvz(ix_1,ix_2,ix_3)*qdt
-             
-             w(ix_1,ix_2,ix_3,m2_)=w(ix_1,ix_2,ix_3,m2_)+(w(ix_1,ix_2,ix_3,rho_)+w(ix_1,ix_2,ix_3,rhob_))*vvx(ix_1,ix_2,ix_3)*qdt
-             
-             w(ix_1,ix_2,ix_3,m3_)= w(ix_1,ix_2,ix_3,m3_)+(w(ix_1,ix_2,ix_3,rho_)+w(ix_1,ix_2,ix_3,rhob_))*vvy(ix_1,ix_2,ix_3)*qdt
-
-             
-             w(ix_1,ix_2,ix_3,e_)=w(ix_1,ix_2,ix_3,e_)+(w(ix_1,ix_2,ix_3,rho_)+w(ix_1,ix_2,ix_3,rhob_))*(vvx(ix_1,ix_2,ix_3)**2.d0 + vvy(ix_1,ix_2,ix_3)**2.d0 + vvz(ix_1,ix_2,ix_3)**2.d0)*qdt/2.d0
-
-
-          ENDDO
-       ENDDO
-    ENDDO
-
-
-    {^IFMPI IF (ipe.EQ.0)} WRITE(*,*) '***time=',qt
-
-  END SUBROUTINE specialsource
-
+include:vacusr.gravity.t
+include:vacusr.viscosity.t
 
 
 !=============================================================================
-SUBROUTINE specialbound(qt,ix^L,iw,iB,w)
-  INCLUDE 'vacdef.f'
+subroutine specialini(ix^L,w)
 
-  INTEGER:: ix_1,ix_2
+  ! Initialize w for VACINI, user-defined
 
-  INTEGER:: iw^LIM,idim^LIM
-  DOUBLE PRECISION:: qt,w(ixG^T,1:nw)
-  INTEGER:: ix,ix^D,ixe,ixf,ix^L,ixpair^L,idim,iw,iB
+  use constants
+  use common_varibles
 
-  CALL die('not defined')
-  RETURN
-END SUBROUTINE specialbound
+  integer:: ix^L
+  double precision:: w(ixG^T,nw)
+  !-----------------------------------------------------------------------------
+
+  call die('Special initial condition is not defined')
+end subroutine specialini
+!=============================================================================
 
 !=============================================================================
-SUBROUTINE getdt_special(w,ix^L)
+subroutine specialbound(qt,ix^L,iw,iB,w)
 
-  ! If the Coriolis force is made very strong it may require time step limiting,
-  ! but this is not implemented here.
+  ! Calculates the boundary values in the iB-th boundary segment, user-defined
 
-  INCLUDE 'vacdef.f'
-  DOUBLE PRECISION:: w(ixG^T,nw)
-  INTEGER:: ix^L
-  !----------------------------------------------------------------------------
+  use constants
+  use common_varibles
 
-  !call getdt_diff(w,ix^L)
+  integer:: ix^L,iw,iB
+  double precision:: qt,w(ixG^T,nw)
+  !-----------------------------------------------------------------------------
 
-  IF(ABS(eqpar(nu_))>smalldouble)&
-       CALL getdt_visc(w,ix^L)
-
-  CALL getdt_grav(w,ix^L)
-
-  RETURN
-END SUBROUTINE getdt_special
+  call die('Special boundary is not defined')
+end subroutine specialbound
+!=============================================================================
 
 !=============================================================================
-SUBROUTINE specialeta(w,ix^L,idirmin)
+! specialsource -- for sources other than resistivity
+! getdt_special -- for time step conditions other than CFL or resistivity
+! specialeta    -- for non-constant resistivity with eqpar(eta_)<zero
+!=============================================================================
+subroutine specialsource(qdt,ixI^L,ixO^L,iws,qtC,wCT,qt,w)
 
-  INCLUDE 'vacdef.f'
+  ! Calculate w(iw)=w(iw)+qdt*SOURCE(wCT,iw) within ixO for all indices
+  ! iw=iws(iiw) where the indirect index iiw=1..iws(niw_).
+  ! wCT is at time qCT, while w is at time qt on input and qt+qdt on output.
+  !
+  ! You may want to use second order accurate time integration if 
+  ! "sourcesplit=T" and/or the "typefull='tvd'" method is used in the par-file.
+  !
+  ! If the source needs wCT values outside ixO, ensurebound should be used:
+  !
+  ! call ensurebound(dix,ixI^L,ixO^L,qtC,wCT)
+  !
+  ! where "dix" is the number of extra layers needed, typically 1 or 2.
 
-  DOUBLE PRECISION:: w(ixG^T,nw)
-  INTEGER:: ix^L,idirmin
-!------------------------------------------------------------------------------
+  use constants
+  use common_varibles
 
-  STOP 'specialeta is not defined'
-END SUBROUTINE specialeta
+  integer:: ixI^L,ixO^L,iws(niw_)
+  double precision:: qdt,qtC,qt,wCT(ixG^T,nw),w(ixG^T,nw)
 
-!------------------------------------------------------------------------------
-SUBROUTINE savefilelog_special(qunit,w,ix^L)
-  
-  ! This is a save log file routine to calculate and save out Vpar Vperp and Vaz
-  ! It mimics savefileout_bin to mantain compatibility with usual readin routines
-  
-  INCLUDE 'vacdef.f'
+  double precision:: s_period, xc1, xc2, xc3, xxmax, yymax, zzmax
+  double precision:: xc1Mm, xc2Mm, xc3Mm
+  double precision:: xx, yy, zz
+  double precision:: vvx(ixG^T), vvy(ixG^T), vvz(ixG^T)
+  double precision:: AA, B, ux, uy, phi, theta
+  double precision:: delta_z, delta_x, delta_y, exp_x, exp_y, exp_z, exp_xyz, tdep
+  !-----------------------------------------------------------------------------
 
-  INTEGER:: qunit,ix^L
-  DOUBLE PRECISION :: w(ixG^T,nw)
+  eqpar(eta_)=0.d0
+  eqpar(nu_)=1.0d0
 
-  CALL die("log save is not defined")
+  call addsource_grav(qdt,ixI^L,ixO^L,iws,qtC,wCT,qt,w)
 
-END SUBROUTINE savefilelog_special
+  if(abs(eqpar(nu_))>smalldouble)&
+       call addsource_visc(qdt,ixI^L,ixO^L,iws,qtC,wCT,qt,w)
 
+  vvx(ixG^T) = 0.d0
+  vvy(ixG^T) = 0.d0
+  vvz(ixG^T) = 0.d0
+
+
+  xc1Mm=0.1   !Mm        z axis
+  xc2Mm=1.0 !0.99d0  !Mm        x axis
+  xc3Mm=1.0 !0.99d0  !Mm        y axis
+
+
+  xc1=xc1Mm*1.0d6  !m        z axis
+  xc2=xc2Mm*1.0d6  !m        x axis
+  xc3=xc3Mm*1.0d6  !m        y axis
+
+  xxmax=2.d6
+  yymax=2.d6
+  zzmax=1.6d6
+
+  delta_z=0.05d6
+  delta_x=0.1d6
+  delta_y=0.1d6
+
+  !### AMPLITUDE ###
+  AA = 20.d0 / sqrt(3.d0)
+  !### EXP_FAC ###
+  B = 0.015
+  !### PERIOD ###
+  s_period = 180.0
+
+  tdep=sin(qt*2.d0*pi/s_period)!*EXP(-(qt/(4.d0 * s_period))**2.d0) 
+  {^IFMPI if (ipe.eq.0)} print*, "tdep==",tdep
+  !tdep=sin(qt*2.d0*pi/s_period) 
+
+  !tdep=1.d0 ! continious rotation
+
+  do ix_1=ixImin1,ixImax1
+     do ix_2=ixImin2,ixImax2
+        do ix_3=ixImin3,ixImax3
+
+
+           xx=x(ix_1,ix_2,ix_3,2)-xc2
+           yy=x(ix_1,ix_2,ix_3,3)-xc3
+           zz=x(ix_1,ix_2,ix_3,1)-xc1  
+
+           exp_z = exp(-zz**2.d0/(delta_z**2.d0))
+           exp_x = exp(-xx**2.d0/(delta_x**2.d0))
+           exp_y = exp(-yy**2.d0/(delta_y**2.d0))
+
+           exp_xyz=exp_x*exp_y*exp_z
+
+           theta = atan2(yy,xx)
+           phi = atan2(1.d0,B)
+
+
+           ux = cos(theta + phi)
+           uy =  sin(theta + phi)
+
+           vvx(ix_1,ix_2,ix_3) = (ux / sqrt(ux**2 + uy**2)) * exp_xyz * tdep * AA
+           vvy(ix_1,ix_2,ix_3) = (uy / sqrt(ux**2 + uy**2)) * exp_xyz * tdep * AA
+
+        enddo
+     enddo
+  enddo
+
+
+  do ix_1=ixImin1,ixImax1
+     do ix_2=ixImin2,ixImax2
+        do ix_3=ixImin3,ixImax3
+
+           !w(ix_1,ix_2,ix_3,m1_)=w(ix_1,ix_2,ix_3,m1_)+(w(ix_1,ix_2,ix_3,rho_)+w(ix_1,ix_2,ix_3,rhob_))*vvz(ix_1,ix_2,ix_3)*qdt
+
+           w(ix_1,ix_2,ix_3,m2_)=w(ix_1,ix_2,ix_3,m2_)+(w(ix_1,ix_2,ix_3,rho_)+w(ix_1,ix_2,ix_3,rhob_))*vvx(ix_1,ix_2,ix_3)*qdt
+
+           w(ix_1,ix_2,ix_3,m3_)= w(ix_1,ix_2,ix_3,m3_)+(w(ix_1,ix_2,ix_3,rho_)+w(ix_1,ix_2,ix_3,rhob_))*vvy(ix_1,ix_2,ix_3)*qdt
+
+
+           w(ix_1,ix_2,ix_3,e_)=w(ix_1,ix_2,ix_3,e_)+(w(ix_1,ix_2,ix_3,rho_)+w(ix_1,ix_2,ix_3,rhob_))*(vvx(ix_1,ix_2,ix_3)**2.d0 + vvy(ix_1,ix_2,ix_3)**2.d0 + vvz(ix_1,ix_2,ix_3)**2.d0)*qdt/2.d0
+
+
+        enddo
+     enddo
+  enddo
+
+
+  {^IFMPI if (ipe.eq.0)} write(*,*) '***time=',qt
+
+  return
+end subroutine specialsource
+
+!=============================================================================
+subroutine getdt_special(w,ix^L)
+
+  ! Limit "dt" further if necessary, e.g. due to the special source terms.
+  ! The getdt_courant (CFL condition) and the getdt subroutine in the VACPHYS 
+  ! module have already been called. 
+
+  use constants
+  use common_varibles
+
+  double precision:: w(ixG^T,nw)
+  integer:: ix^L
+  !-----------------------------------------------------------------------------
+
+  ! Something like this
+  !
+  ! dt_mine=...
+  ! dt=min(dt,dt_mine)
+
+  return
+end subroutine getdt_special
+
+!=============================================================================
+subroutine specialeta(w,ix^L,idirmin)
+
+  ! Set the common "eta" array for resistive MHD based on w and the common
+  ! "current" variable which has components between idirmin and 3.
+  ! If resistivity should be treated implicitly, the "gradeta" array 
+  ! has to be set. It may use the closest neighbours of "w" (jx,ix,hx), 
+  ! and/or local values (ix) of "current" only, i.e. it has to be compact.
+
+  use constants
+  use common_varibles
+
+  double precision:: w(ixG^T,nw)
+  integer:: ix^L,idirmin
+
+  call die('specialeta is not defined')
+end subroutine specialeta
+!=============================================================================
+
+!=============================================================================
+subroutine readfileini_special(w)
+
+  ! Reads from unitini,filenameini in user-defined format.
+  ! Check readfileini_asc and readfileini_bin in vacio.t on what should be done.
+
+  use constants
+  use common_varibles
+
+  double precision:: w(ixG^T,nw)
+  !-----------------------------------------------------------------------------
+
+  call die('Special readfileini is not defined')
+end subroutine readfileini_special
+!=============================================================================
+subroutine savefileout_special(qunit,w,ix^L)
+
+  ! Save current results into filenameout in user-defined format.
+  ! Check savefileout_asc and savefileout_bin in vacio.t on what should be done.
+
+  use constants
+  use common_varibles
+
+  integer:: qunit,ix^L
+  double precision:: w(ixG^T,nw)
+  !-----------------------------------------------------------------------------
+
+  call die('Special savefileout is not defined')
+end subroutine savefileout_special
+!=============================================================================
+subroutine savefilelog_special(qunit,w,ix^L)
+
+  ! Save user-defined log data into filename(filelog_) in user-defined format.
+  ! Check savefilelog_default on opening the file etc.
+
+  use constants
+  use common_varibles
+
+  integer:: qunit,ix^L
+  double precision:: w(ixG^T,nw)
+  !-----------------------------------------------------------------------------
+
+  call die('Special savefilelog is not defined')
+end subroutine savefilelog_special
+!=============================================================================
+
+!##############################################################################
+! end module vacusr - nul
+!##############################################################################
