@@ -1,7 +1,7 @@
 &testlist /
 &filelist
 
-	filenameini='/home/stuart/GitHub/SWAT/flux-surfaces/data/3D_tube_128_128_128.ini'
+	filenameini='/home/smq11sjm/GitHub/SWAT/Flux-Surfaces/data/3D_tube_128_128_128.ini'
     typefileini='binary'
     fullgridini= T
     fullgridout= T

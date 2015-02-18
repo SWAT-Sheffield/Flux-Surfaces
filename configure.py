@@ -138,11 +138,11 @@ if arguments['compile'] and arguments['SAC']:
 
     for i,line in enumerate(f_lines):
         if line.strip() == "!### AMPLITUDE ###":
-            f_lines[i+1] = '    AA = %s\n'%cfg.fort_amp
+            f_lines[i+1] = '  AA = %s\n'%cfg.fort_amp
         if line.strip() == "!### PERIOD ###":
-            f_lines[i+1] = '    s_period = %s\n'%cfg.period
+            f_lines[i+1] = '  s_period = %s\n'%cfg.period
         if line.strip() == "!### EXP_FAC ###":
-            f_lines[i+1] = '    B = %s\n'%cfg.exp_fac
+            f_lines[i+1] = '  B = %s\n'%cfg.exp_fac
     f.close()
 
     #Truncate and overwrite
@@ -155,7 +155,8 @@ if arguments['compile'] and arguments['SAC']:
     #==============================================================================
     #Compile VAC
     os.chdir(sac_path("src"))
-    os.system('./setvac -u=Slog -p=mhd')
+    os.system('./setvac -u=Slog -p=mhd -d=33 -g=68,68,68 -on=mpi')
+    os.system('./setvac -s')
     if arguments['--clean']:
         os.system('./sac_fabricate.py --clean')
     else:

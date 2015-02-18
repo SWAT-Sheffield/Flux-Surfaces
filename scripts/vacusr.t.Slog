@@ -2,8 +2,8 @@
 ! module vacusr - nul
 !##############################################################################
 
-include:vacusr.gravity.t
-include:vacusr.viscosity.t
+INCLUDE:vacusr.gravity.t
+INCLUDE:vacusr.viscosity.t
 
 
 !=============================================================================
@@ -103,7 +103,7 @@ subroutine specialsource(qdt,ixI^L,ixO^L,iws,qtC,wCT,qt,w)
   delta_y=0.1d6
 
   !### AMPLITUDE ###
-  AA = 20.d0 / sqrt(3.d0)
+  AA = 20.d0 / SQRT(3.d0)
   !### EXP_FAC ###
   B = 0.015
   !### PERIOD ###
