@@ -57,6 +57,15 @@ class SACConfig(object):
         self._set_value('SAC', 'runtime', value)
 
     @property
+    def grid_size(self):
+        self._grid_size = self._get_value('SAC', 'grid_size')
+        return self._grid_size
+
+    @grid_size.setter
+    def grid_size(self, value):
+        self._set_value('SAC', 'grid_size', value)
+
+    @property
     def mpi_config(self):
         self._mpi_config = self._get_value('SAC', 'mpi_config')
         return self._mpi_config
@@ -140,6 +149,50 @@ class SACConfig(object):
     def fort_amp(self, value):
         self._set_value('driver', 'fort_amp', value)
 
+    @property
+    def delta_x(self):
+        self._delta_x = self._get_value('driver', 'delta_x')
+        return self._delta_x
+
+    @delta_x.setter
+    def delta_x(self, value):
+        self._set_value('driver', 'delta_x', value)
+
+    @property
+    def delta_y(self):
+        self._delta_y = self._get_value('driver', 'delta_y')
+        return self._delta_y
+
+    @delta_y.setter
+    def delta_y(self, value):
+        self._set_value('driver', 'delta_y', value)
+
+    @property
+    def delta_z(self):
+        self._delta_z = self._get_value('driver', 'delta_z')
+        return self._delta_z
+
+    @delta_z.setter
+    def delta_z(self, value):
+        self._set_value('driver', 'delta_z', value)
+
+    @property
+    def identifier(self):
+        self._identifier = self._get_value('driver', 'identifier').split(',')
+        self._identifier = [r.strip() for r in self._identifier]
+        return self._identifier
+
+    @identifier.setter
+    def identifier(self, value):
+        if isinstance(value, str):
+            self._identifier = value
+        elif isinstance(value, list):
+            self._identifier = ', '.join(value)
+        else:
+            raise TypeError("Unknown input")
+
+        self._set_value('driver', 'identifier', self._identifier)
+
 #==============================================================================
 #   Analysis Configs
 #==============================================================================
@@ -151,10 +204,10 @@ class SACConfig(object):
 
     @tube_radii.setter
     def tube_radii(self, value):
-        if isinstance(str, value):
-            self._radii = value.split(',')
-        elif isinstance(list, value):
+        if isinstance(value, str):
             self._radii = value
+        elif isinstance(value, list):
+            self._radii = ', '.join(value)
         else:
             raise TypeError("Unknown input")
 
@@ -211,8 +264,11 @@ class SACConfig(object):
 #   Utils
 #==============================================================================
     def get_identifier(self):
-        return "%s_%s_%s_%s" %(self.driver, self.str_period,
-                               self.amp, self.str_exp_fac)
+        id = ""
+        for tag in self.identifier:
+            x = getattr(self, tag)
+            id += "{}_".format(x)
+        return id[:-1]  # Last _ is not wanted
 
     def save_cfg(self):
         with open(self.cfg_file, 'wb') as configfile:
@@ -245,16 +301,22 @@ class SACConfig(object):
             print "compiler_flags:", self.compiler_flags
             print "vacmodules:", self.vac_modules
             print "runtime:", self.runtime
-            print "mpi config:", self.mpi_config
+            print "mpi_config:", self.mpi_config
+            print "grid_size:", self.grid_size
             print "varnames:", self.varnames
         if driver:
             print "-"*79
             print "Driver:"
             print "-"*79
+            print "driver:", self.driver
             print "period:", self.period
             print "exp_fac:", self.exp_fac
             print "amp:", self.amp
             print "fort_amp:", self.fort_amp
+            print "delta_x:", self.delta_x
+            print "delta_y:", self.delta_y
+            print "delta_z:", self.delta_z
+            print "identifier:", self.identifier
         if analysis:
             print "-"*79
             print "analysis:"

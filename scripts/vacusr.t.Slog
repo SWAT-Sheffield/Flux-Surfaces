@@ -97,15 +97,18 @@ subroutine specialsource(qdt,ixI^L,ixO^L,iws,qtC,wCT,qt,w)
   xxmax=2.d6
   yymax=2.d6
   zzmax=1.6d6
-
-  delta_z=0.05d6
-  delta_x=0.1d6
-  delta_y=0.1d6
+  
+  !### DELTA_Z ###
+ delta_z = 0.05d6
+  !### DELTA_X ###
+ delta_x = 0.5d6
+  !### DELTA_Y ###
+ delta_y = 0.5d6
 
   !### AMPLITUDE ###
   AA = 20.d0 / SQRT(3.d0)
   !### EXP_FAC ###
-  B = 0.015
+  B = 0.15
   !### PERIOD ###
   s_period = 180.0
 

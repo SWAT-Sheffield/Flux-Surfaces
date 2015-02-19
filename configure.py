@@ -3,8 +3,8 @@
 Configure repository, configure and compile SAC and analysis
 
 Usage:
-    configure.py set SAC [--compiler=<compiler>] [--compiler_flags=<flg>] [--vac_modules=<mod>] [--runtime=<s>] [--mpi_config=<cfg>] [--varnames=<s>]
-    configure.py set driver [--driver=<driver>] [--period=<s>] [--exp_fac=<exp>] [--amp=<amp_str>] [--fort_amp=<fort_amp>]
+    configure.py set SAC [--compiler=<compiler>] [--compiler_flags=<flg>] [--vac_modules=<mod>] [--runtime=<s>] [--mpi_config=<cfg>] [--varnames=<s>] [--grid_size=<grid_size]
+    configure.py set driver [--driver=<driver>] [--period=<s>] [--exp_fac=<exp>] [--amp=<amp_str>] [--fort_amp=<fort_amp>] [--delta_x=<delta_x>] [--delta_y=<delta_y>] [--delta_z=<delta_z>] [--identifier=<identifier>]
     configure.py set analysis [--tube_radii=<radii>]
     configure.py set data [--ini_dir=<dir>] [--out_dir=<dir>] [--data_dir=<dir>] [--gdf_dir=<dir>]
     configure.py print [<section>]
@@ -95,13 +95,13 @@ if arguments['compile'] and arguments['SAC']:
     os.symlink(os.path.realpath('./scripts/vac_config.par'),
                os.path.realpath(sac_path('vac.par')))
 
-    check_file('src/vacusrpar.t.Slog')
-    os.symlink(os.path.realpath('./scripts/vacusrpar.t.Slog'),
-               sac_path('src/vacusrpar.t.Slog'))
+    check_file('src/vacusrpar.t.{}'.format(cfg.driver))
+    os.symlink(os.path.realpath('./scripts/vacusrpar.t.{}'.format(cfg.driver)),
+               sac_path('src/vacusrpar.t.{}'.format(cfg.driver)))
 
-    check_file('src/vacusr.t.Slog')
-    os.symlink(os.path.realpath('./scripts/vacusr.t.Slog'),
-               sac_path('src/vacusr.t.Slog'))
+    check_file('src/vacusr.t.{}'.format(cfg.driver))
+    os.symlink(os.path.realpath('./scripts/vacusr.t.{}'.format(cfg.driver)),
+               sac_path('src/vacusr.t.{}'.format(cfg.driver)))
 
     #==============================================================================
     # Process vac.par
@@ -133,10 +133,17 @@ if arguments['compile'] and arguments['SAC']:
     #==============================================================================
     # Process vacusr.t.Slog
     #==============================================================================
-    f = open(sac_path('src/vacusr.t.Slog'), 'r')
+    source_file = sac_path('src/vacusr.t.{}'.format(cfg.driver))
+    f = open(source_file, 'r')
     f_lines = f.readlines()
 
     for i,line in enumerate(f_lines):
+        if line.strip() == "!### DELTA_X ###":
+            f_lines[i+1] = ' delta_x = {}d6\n'.format(cfg.delta_x)
+        if line.strip() == "!### DELTA_Y ###":
+            f_lines[i+1] = ' delta_y = {}d6\n'.format(cfg.delta_y)
+        if line.strip() == "!### DELTA_Z ###":
+            f_lines[i+1] = ' delta_z = {}d6\n'.format(cfg.delta_z)
         if line.strip() == "!### AMPLITUDE ###":
             f_lines[i+1] = '  AA = %s\n'%cfg.fort_amp
         if line.strip() == "!### PERIOD ###":
@@ -146,7 +153,7 @@ if arguments['compile'] and arguments['SAC']:
     f.close()
 
     #Truncate and overwrite
-    f = open(sac_path('src/vacusr.t.Slog'), 'w')
+    f = open(source_file, 'w')
     f.writelines(f_lines)
     f.close()
 
@@ -155,7 +162,7 @@ if arguments['compile'] and arguments['SAC']:
     #==============================================================================
     #Compile VAC
     os.chdir(sac_path("src"))
-    os.system('./setvac -u=Slog -p=mhd -d=33 -g=68,68,68 -on=mpi')
+    os.system('./setvac -u=Slog -p=mhd -d=33 -g={} -on=mpi'.format(cfg.grid_size))
     os.system('./setvac -s')
     if arguments['--clean']:
         os.system('./sac_fabricate.py --clean')

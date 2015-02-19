@@ -5,8 +5,8 @@
     typefileini='binary'
     fullgridini= T
     fullgridout= T
-	filename='/nobackup/shesm/PaperExp/outs/3D_tube128_Slog_p180-0_A20-r3_B0015.log'
-		'/nobackup/shesm/PaperExp/outs/3D_tube128_Slog_p180-0_A20-r3_B0015.out'
+	filename='/mnt/fastdata/smq11sjm/Flux_Surfaces/outs/3D_tube128_Slog_p180-0_A20-r3_B015.log'
+		'/mnt/fastdata/smq11sjm/Flux_Surfaces/outs/3D_tube128_Slog_p180-0_A20-r3_B015.out'
 
     typefileout='binary'
     typefilelog='default'
