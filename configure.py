@@ -31,6 +31,7 @@ Options:
 """
 import os
 import sys
+import glob
 
 try:
     import docopt
@@ -77,8 +78,11 @@ tube_radii = cfg.tube_radii
 identifier = cfg.get_identifier()
 job_name = "sac_%s_%s"%(driver,period)
 
+# Root path of repo
+root_path = os.path.realpath(os.path.dirname(__file__))
+
 def sac_path(path):
-    return os.path.join(os.path.realpath('./sac/sac/'), path)
+    return os.path.join(root_path, 'sac/sac/', path)
 
 def check_file(path):
     # Make sure the current vac.par is a symlink
@@ -103,6 +107,16 @@ if arguments['compile'] and arguments['SAC']:
     os.symlink(os.path.realpath('./scripts/vacusr.t.{}'.format(cfg.driver)),
                sac_path('src/vacusr.t.{}'.format(cfg.driver)))
 
+    # Distribute ini file:
+    os.chdir(cfg.ini_dir)
+    if not os.path.isfile('3D_tube_128_128_128.ini'):
+        raise ValueError("No initial conditions found, please download with ./run.py download ini")
+    else:
+        if not len(glob.glob('3D_tube_128_128_128_{}_*.ini'.format(cfg.mpi_config))) == 16:
+            print "Distributing ini file..."
+            os.system('{} 3D_tube_128_128_128.ini 3D_tube_128_128_128_{}.ini'.format(sac_path('distribution'),
+                                                                                 cfg.mpi_config))
+    os.chdir(root_path)
     #==============================================================================
     # Process vac.par
     #==============================================================================
@@ -111,15 +125,15 @@ if arguments['compile'] and arguments['SAC']:
 
     for i,line in enumerate(f_lines):
         if line.strip().startswith("filenameini="):
-            f_lines[i] = '\t' + "filenameini='" + os.path.join(cfg.ini_dir,
-                                        "3D_tube_128_128_128.ini'\n")
+            f_lines[i] = '    ' + "filenameini='" + os.path.join(cfg.ini_dir,
+                                        "3D_tube_128_128_128_{}.ini'\n".format(cfg.mpi_config))
         if line.strip().startswith("filename="):
-            f_lines[i] = '\t' + "filename='" + os.path.join(out_dir,
+            f_lines[i] = '    ' + "filename='" + os.path.join(out_dir,
                                     "3D_tube128_%s.log'\n"%identifier)
-            f_lines[i+1] = "\t\t'" + os.path.join(out_dir,
+            f_lines[i+1] = "        '" + os.path.join(out_dir,
                                     "3D_tube128_%s.out'\n"%identifier)
         if line.strip().startswith("wnames="):
-            f_lines[i] = '\t' + "wnames='" + ' '.join(cfg.varnames).encode('ascii') +"'\n"
+            f_lines[i] = '    ' + "wnames='" + ' '.join(cfg.varnames).encode('ascii') +"'\n"
     f.close()
 
     for i in range(len(f_lines)):

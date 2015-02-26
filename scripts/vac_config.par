@@ -1,12 +1,12 @@
 &testlist /
 &filelist
 
-	filenameini='/home/smq11sjm/GitHub/SWAT/Flux-Surfaces/data/3D_tube_128_128_128.ini'
+    filenameini='/mnt/fastdata/smq11sjm/inidata/3D_tube_128_128_128_np020204.ini'
     typefileini='binary'
     fullgridini= T
     fullgridout= T
-	filename='/mnt/fastdata/smq11sjm/Flux_Surfaces/outs/3D_tube128_Slog_p180-0_A20-r3_B015.log'
-		'/mnt/fastdata/smq11sjm/Flux_Surfaces/outs/3D_tube128_Slog_p180-0_A20-r3_B015.out'
+    filename='/mnt/fastdata/smq11sjm/Flux_Surfaces/outs/3D_tube128_Slog_p180-0_A20-r3_B015.log'
+        '/mnt/fastdata/smq11sjm/Flux_Surfaces/outs/3D_tube128_Slog_p180-0_A20-r3_B015.out'
 
     typefileout='binary'
     typefilelog='default'
@@ -24,7 +24,7 @@
 
 &methodlist
 
-	wnames='h m1 m2 m3 e b1 b2 b3 eb rhob bg1 bg2 bg3'
+    wnames='h m1 m2 m3 e b1 b2 b3 eb rhob bg1 bg2 bg3'
     typefull=   8*'cd4',5*'nul'
     typeadvance=    'onestep'
     typefilter= 13*'nul'

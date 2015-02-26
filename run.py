@@ -41,6 +41,10 @@ os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 arguments = docopt.docopt(__doc__, version='1.0.0')
 
+
+from scripts import sacconfig
+cfg = sacconfig.SACConfig()
+
 #MPI Exec function
 def mpi_exec(arguments, command):
     if not arguments['--mpi']:
@@ -48,7 +52,7 @@ def mpi_exec(arguments, command):
     if arguments['--mpi'] and arguments['--np']:
         os.system('mpirun -np %s %s'%(arguments['--np'], command))
     if arguments['--mpi'] and arguments['--np'] is None:
-        os.system('mpirun %s'%command)
+        os.system('mpirun -np {} {}'.format(cfg.mpi_size, command))
 
 #Run SAC
 if arguments['SAC'] == 'SAC':
@@ -94,7 +98,7 @@ if arguments['download'] or arguments['SAC'] == 'download':
 
     if arguments['ini']:
         data_url = ini_data_url
-        filename = 'data/3D_tube_128_128_128.ini'
+        filename = os.path.join(cfg.ini_dir, '3D_tube_128_128_128.ini')
     else:
         print "No Download Specified. Try run.py download ini"
         sys.exit()

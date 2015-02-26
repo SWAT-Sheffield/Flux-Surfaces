@@ -75,6 +75,13 @@ class SACConfig(object):
         self._set_value('SAC', 'mpi_config')
 
     @property
+    def mpi_size(self):
+        r1 = int(self.mpi_config[2:4])
+        r2 = int(self.mpi_config[4:6])
+        r3 = int(self.mpi_config[6:8])
+        return r1*r2*r3
+
+    @property
     def varnames(self):
         self._varnames = self._get_value('SAC', 'varnames').split(' ')
         return self._varnames
@@ -313,9 +320,9 @@ class SACConfig(object):
             print "exp_fac:", self.exp_fac
             print "amp:", self.amp
             print "fort_amp:", self.fort_amp
-            print "delta_x:", self.delta_x
-            print "delta_y:", self.delta_y
-            print "delta_z:", self.delta_z
+            print "delta_x:", self.delta_x, "Mm"
+            print "delta_y:", self.delta_y, "Mm"
+            print "delta_z:", self.delta_z, "Mm"
             print "identifier:", self.identifier
         if analysis:
             print "-"*79
@@ -326,8 +333,8 @@ class SACConfig(object):
             print "-"*79
             print "data:"
             print "-"*79
-            print "ini_dir", self.ini_dir
+            print "ini_dir:", self.ini_dir
             print "out_dir:", self.out_dir
-            print "data_dir", self.data_dir
-            print "gdf_dir", self.gdf_dir
-            print "fig_dir", self.fig_dir
+            print "data_dir:", self.data_dir
+            print "gdf_dir:", self.gdf_dir
+            print "fig_dir:", self.fig_dir
