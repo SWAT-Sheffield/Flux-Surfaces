@@ -1,0 +1,86 @@
+ &testlist
+	teststr=' '
+	ixtest1=3, ixtest2=3, ixtest3=3
+	iwtest=1
+	idimtest=1
+ /
+
+ &filelist
+	typefileini='auto'
+	typefileout='auto'
+	typefilelog='default'
+	snapshotini=0
+	snapshotout=0
+	fullgridini=F
+	fullgridout=F
+ /
+
+ &savelist
+ /
+
+ &stoplist
+	itmax=		1000000
+	tmax=		1.D99
+	tmaxexact=	F
+	dtmin=		1.D-99
+	residmin=	0.D0
+	residmax=	1.D99
+ /
+
+ &methodlist
+	typeadvance=	'twostep'
+	typefct=	'etbfct'
+	typetvd=	'roe'
+	typeaxial=	'slab'
+	typelimited=	'original'
+	useprimitive=	F
+	acmwidth=	1
+	acmnolim=	F
+	acmexpo=	0.D0
+	fourthorder=	F
+	dimsplit=	T
+	typedimsplit=	'default'
+	sourcesplit=	F
+	sourceunsplit=	T
+	typesourcesplit='default'
+	divbfix=	T
+	divbwave=	T
+	typepoisson=	'default'
+	divbconstrain=	F
+	typeconstrain=	'EfieldCD'
+	angmomfix=	F
+	muscleta=	0.D0
+	musclomega=	0.D0
+	smallfix=	F
+	smallpcoeff=	1.D-6
+	smallrhocoeff=	1.D-6
+	compactres =	F
+        implmrpc =      F
+ /
+
+ &boundlist
+	extraB =	F
+ /
+
+ &paramlist
+	courantpar=	0.8D0
+	dtcantgrow=	F
+	dtdiffpar=	0.5D0
+	dtpar=		-1.D0
+	slowsteps=	0
+	implmrpcpar=    4
+	implrelax=	-0.5
+	impldiffpar=	1.D-12
+	impldwlimit=	1.D99
+	impliternr=	20
+	impliter=	100
+	implrestart=	20
+	implrestart2=	5
+	typeimpliter=	'vac_bicg'
+	impljacfast=	F
+	implnewton=	F
+	implnewmat=	F
+	implpred=	F
+	implconserv=	F
+	implcentered=	F
+ /

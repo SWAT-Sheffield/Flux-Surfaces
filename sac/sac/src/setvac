@@ -1,0 +1,234 @@
+#!/usr/bin/perl -si
+if(!($d||$g||$on||$off||$s||$p||length($phi)||$u||length($z))){
+   print STDERR <<HELPMSG ;
+
+setvac [-d=NdimNdir] [-g=n1,n2,n3] [-p=PHYSICS] [-phi=Idirphi] [-z=Idirz] \\
+       [-u=USERFILE] [-on=M1,..] [-off=M2,..] [-s]
+
+Ndim and Ndir are number of spatial DIMENSIONS and vector components,
+respectively, the GRID size is defined by Ndim integers n1,n2...
+PHYSICS is the extension name for vacphys0.t, vacphys.t, and vacpar.t.
+Idirphi and Idirz define the indexnames for cylindrical coordinates (2,3 or 0).
+USERFILE is the extension for vacusr.t and the optional vacusrpar.t file.
+The M1,M2,... switches can be ON and OFF, they include 
+'cd,mc,fct,tvdlf,tvd,impl,poisson,ct,gencoord,resist,rk,mpi' corresponding to 
+modules 'vaccd,vacmc,vacfct,vactvdlf,vactvd,vacimpl,vacpoisson,
+vacproc.constrainb, vacgrid.gencoord,vacphys.mhdres', some extra arrays 
+for Runge-Kutta integration, and the MPI parallelization, respectively.
+If a module is off, it is neither compiled, nor linked, and the corresponding
+feature cannot be used. However, memory usage and compilation time are reduced.
+To see the SETTINGS use the -s flag. Don't forget the "=" signs and commas!
+
+Examples:
+
+setvac -d=22 -g=100,70 -phi=0 -z=2 -p=mhd -u=nul
+setvac -on=tvdlf,tvd,resist -off=fct,impl,gencoord -s
+setvac -s
+HELPMSG
+exit}
+
+
+$showonly= $s && !($d||$g||$on||$off||$p||$u||length($phi)||length($z));
+
+if($d){
+    # Calculate ndim=$d and ndir=$c from the $d=10*ndim+ndir flag.
+    $c=$d-10*int($d/10); $d=int($d/10);
+    1<=$d  && $d<=3 || exit(print "1 <= ndim <= 3 should hold!\n");
+    $d<=$c && $c<=3 || exit(print "ndim <= ndir <= 3 should hold!\n");
+}
+
+if($g){
+    # Edit the line in vacdef.t specifying ixGhi according to the $g flag.
+    @g=split(',',$g);
+    $gmin=$g[0];$gmax=$g[0];foreach $g (@g){
+        $gmin=$g if $g<$gmin;
+        $gmax=$g if $g>$gmax;
+    }
+    @ARGV=("vacdef.t");
+    while(<>){
+        if(/ixGhi1=/){
+            $_=$`;for($i=0;$i<=$#g;$i++){$_ .= "ixGhi".($i+1)."=".$g[$i].",";};
+            $_.="ixGhimin=$gmin,ixGhimax=$gmax\n";
+        }
+        print;
+    }
+}
+
+if($d || $on || $off){
+    @on=split(',',$on); @off=split(',',$off);
+    # Set switches in vacpp.pl according to $c, $d, @on, and @off.
+    @ARGV=("vacpp.pl");
+    $doit=1;
+    while(<>){
+      if($doit){
+         s/ndim=./ndim=$d/ if($d);
+         s/ndir=./ndir=$c/ if($c);
+         foreach $switch (@on)  {s/if_$switch=./if_$switch=1/}
+         foreach $switch (@off) {s/if_$switch=./if_$switch=0/}
+      }
+      $doit=0 if /SETVAC READS UP TO THIS POINT/;
+      print;
+    }
+
+    # Edit Makefile for linking "vactvdlf,vactvd,vacfct,vacimpl,vacmpi" 
+    # accordingly.
+    foreach $switch (@on) {push(@onmod,$switch) 
+       if "cd,mc,fct,tvdlf,tvd,impl,poisson,mpi"=~/\b$switch\b/}
+    foreach $switch (@off){push(@offmod,$switch)
+       if "cd,mc,fct,tvdlf,tvd,impl,poisson,mpi"=~/\b$switch\b/}
+    if(@onmod||@offmod){
+        @ARGV=("Makefile");
+        while(<>){
+           if(/^VAC((O)BJ|(F)OR)\b/){
+              $ext="$2$3";
+              foreach $mod (@onmod) {s/ vac$mod\$.//; s/$/ vac$mod\$$ext/}
+              foreach $mod (@offmod){s/ vac$mod\$.//}
+           }
+           if(/^VACINI((O)BJ|(F)OR)\b/){
+              $ext="$2$3";
+              foreach $mod (@onmod) {
+                 if($mod eq "mpi"){s/ vac$mod\$.//; s/$/ vac$mod\$$ext/}
+              }
+              foreach $mod (@offmod){s/ vac$mod\$.// if($mod eq "mpi")}
+           }
+           if(/^\#? ?LIBS_?\b/){
+              # Uncomment libraries if VACIMPL is on
+              if($on=~/\bimpl\b/){s/^\#? ?LIBS/LIBS/}
+              # Comment out libraries if VACIMPL is off
+              if($off=~/\bimpl\b/){s/^\#? ?LIBS/\#LIBS/}
+           }
+           print;
+        }
+    }
+}
+
+if($p){
+   # Link vacpar.t, vacphys0.t, and vacphys.t 
+   # to vacpar.t.$p, vacphys0.t.$p and vacphys.t.$p, respectively.
+   foreach $link ('vacpar.t','vacphys0.t','vacphys.t'){
+      `/bin/rm -f $link` if -e "$link";
+      $file="$link.$p";
+      `ln -s $file $link` if -e $file ||
+          print STDERR "$file file does not exist!\n";
+      `touch $link`;
+   }
+   # Edit maxndimnw variable in vacdef.t
+   $maxndimnw = $p eq 'rho' ? "ndim" : "nw";
+   @ARGV=("vacdef.t");
+   while(<>){
+      s/\bmaxndimnw=\w+/maxndimnw=$maxndimnw/;
+      print;
+   }
+}
+
+if(length($phi) || length($z)){
+    # Set phi_ and z_ in vacpp.pl
+    # Read current values
+    open(VACPP,"vacpp.pl");
+    while(($_=<VACPP>)!~/^\$phi=/){};
+    ($phi0,$z0)=/phi=(\-?\d*); \$z=(\-?\d*)/;
+    close(VACPP);
+    $phi0=0 if $phi0<0; $z0=0 if $z0<0;
+
+    # Use current values if not defined by the switches
+    $phi=$phi0 unless length($phi);
+    $z=$z0 unless length($z);
+
+    if($phi != $phi0 || $z != $z0){
+        # Check for validity
+        exit(print "-phi=$phi and -z=$z have to differ unless both are 0\n") 
+           if $phi==$z && $phi!=0;
+        exit(print "-phi can only be 0, 2, or 3\n") 
+           if $phi!=0 && $phi!=2 && $phi!=3;
+        exit(print "-z can only be 0, 2, or 3\n") 
+           if $z!=0 && $z!=2 && $z!=3;
+        # Change settings in vacdef.t. Big negative integers are used for 
+        # the switched off directions so that mphi_ and bphi_ remain negative.
+        $phi=-9 if $phi==0; $z=-8 if $z==0;
+        @ARGV=("vacpp.pl");
+        while(<>){
+           s/^\$phi=.*/\$phi=$phi; \$z=$z;/;
+           print;
+        }
+    }
+}
+
+if($u){
+   # Link vacusr.t to vacusr.t.$u
+   `/bin/rm -f vacusr.t` if -e 'vacusr.t';
+   `ln -s vacusr.t.$u vacusr.t` if -e("vacusr.t.$u") ||
+        print STDERR "vacusr.t.$u file does not exist!\n";
+   `touch vacusr.t`;
+
+   # If vacusrpar.t.$u does not exist link vacusrpar.t to vacusrpar.t.nul
+   $upar=$u;
+   $upar='nul' unless -e("vacusrpar.t.$u");
+   # Check whether vacusrpar.t is already linked to vacusrpar.t.$u
+   if(-e("vacusrpar.t")){
+      `ls -l vacusrpar.t`=~/vacusrpar\.t\./; chop($upar0="$'");
+   }else{$upar0=''}
+   # Link and touch vacusrpar.t if necessary
+   if($upar ne $upar0){
+      `/bin/rm -f vacusrpar.t` if -e 'vacusrpar.t';
+      `ln -s vacusrpar.t.$upar vacusrpar.t`;
+      `touch vacusrpar.t`;
+   }
+}
+
+# Collect current settings
+
+# Check symbolic links first
+`ls -l vacphys.t`=~/vacphys\.t\./; chop($par="$'");
+`ls -l vacpar.t`=~/vacpar\.t\./;   chop($phys="$'");
+
+exit(print"vacpar.t and vacphys.t set to extensions '$par'<>'$phys' !\n")
+     if $par ne $phys;
+`ls -l vacusr.t`=~/vacusr\.t\./;   chop($usr="$'");
+
+# Read the parameters set in vacpp.pl
+open(VACPP,"vacpp.pl");
+# Find ndim and ndir and switches
+while($_=<VACPP>){
+   chop;
+   ($ndim,$ndir)=/ndim=(.); \$ndir=(.)/ if /^\$ndim=/;
+   ($phi,$z)=/\$phi=(\-?\d*); \$z=(\-?\d*)/ if /^\$phi=/;
+   $switch.=$_ if /^\$if_/;
+   last if /SETVAC READS UP TO THIS POINT/;
+}
+close(VACPP);
+$d=10*$ndim+$ndir;
+$phi=0 if $phi<0; $z=0 if $z<0;
+
+$switch=~s/;? *\$if_/,/g; $switch=~s/^,//; $switch=~s/;$//;
+$on=$switch;  $on =~s/\w*=0,?//g; $on =~s/=1//g; $on =~s/,$//;
+$off=$switch; $off=~s/\w*=1,?//g; $off=~s/=0//g; $off=~s/,$//;
+if($on){$on=' -on='.$on}; if($off){$off=' -off='.$off};
+
+# Read the grid size from vacdef.t
+open(VACDEF,"vacdef.t");
+while(($_=<VACDEF>)!~/ixGhi/){}; 
+close(VACDEF);
+/(ixGhi.*),ixGhimin/;$_=$1;s/ixGhi[123]=//g;$g=$_;
+@g=split(',',$g);
+exit(print"ndim=$ndim is greater than the number of defined sizes g=$g!\n")
+        if $ndim > 1+$#g;
+
+$settings="-d=$d -phi=$phi -z=$z -g=$g -p=$phys -u=$usr";
+$modules="$on$off";
+
+if($s){
+    # Show the current settings
+    print "setvac $settings \\\n      $modules\n";
+    exit if $showonly;
+}
+
+# Put current settings into vac.t and vacini.t
+@ARGV=('vac.t','vacini.t');
+while(<>){
+   s/' +\-d=.*/'  $settings'/;
+   s/' +\-on=.*/' $on'/;
+   s/' +\-off=.*/' $off'/;
+   print;
+}
+`touch vac.t vacini.t`;
+

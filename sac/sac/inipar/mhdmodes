@@ -1,0 +1,17 @@
+/data/smq11sjm/VAC/data/mhdmodes_3D.ini
+3D_mhd33
+x y z h m1 m2 m3 e b1 b2 b3 eb rhob bg1 bg2 bg3
+typefileout
+binary
+typefileini
+binary
+domain
+15,15,15			-ixmax
+0.d0, 0.d0, 0.0d0		-min coordinates
+1.0d0, 1.0d0, 1.0d0 		-max coordinates
+eqpar
+1.66666667 0.0 0.0 0.0 0.0 0.0 1.0  gamma eta g0 g1 g2 g3 nu 
+uniform
+0. 0. 0. 0. 0. 0. 0. 0.    0. 1. 3. 0. 0. -rho,m1,m2,m3,e, b1, b2,b3,  eb rhob bg1 bg2 bg3
+special
+save
