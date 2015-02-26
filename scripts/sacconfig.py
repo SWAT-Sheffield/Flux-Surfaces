@@ -72,7 +72,7 @@ class SACConfig(object):
 
     @mpi_config.setter
     def mpi_config(self, value):
-        self._set_value('SAC', 'mpi_config')
+        self._set_value('SAC', 'mpi_config', value)
 
     @property
     def mpi_size(self):

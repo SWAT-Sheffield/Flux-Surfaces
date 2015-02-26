@@ -1,7 +1,7 @@
 &testlist /
 &filelist
 
-    filenameini='/mnt/fastdata/smq11sjm/inidata/3D_tube_128_128_128_np020204.ini'
+    filenameini='/mnt/fastdata/smq11sjm/inidata/3D_tube_128_128_128_np020202.ini'
     typefileini='binary'
     fullgridini= T
     fullgridout= T
