@@ -36,3 +36,4 @@ sac/src/.deps
 *.pytxmcr
 *.pytxpyg
 data/3D_tube_128_128_128.ini
+data/3D_tube_128_128_128*.ini

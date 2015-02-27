@@ -6,44 +6,57 @@
 #$ -pe openmpi-ib 16
 #$ -P mhd
 #$ -q mhd.q
-#$ -N all_periods
+#$ -N driver_paper
 #$ -j y
 #$ -t 1 
 
 source $HOME/.bashrc
 module load mpi/intel/openmpi/1.8.3
 module load apps/python2-virtual/2.7.6
-workon vtk6
 export PATH=:/home/smq11sjm/.virtualenvs/vtk6/bin:$PATH
 export LD_LIBRARY_PATH=/home/smq11sjm/.virtualenvs/vtk_hdf/lib/vtk-6.1/:$LD_LIBRARY_PATH
 echo $(which python)
 #################################################################
 ################ Set the Parameters for the array ###############
 #################################################################
-drivers=('Slog')
+i=$((SGE_TASK_ID - 1))
+
+drivers=('Slog' 'Sarch' 'Suni' 'horiz' 'vert')
+
+if [[ ${drivers[i]} = 'Slog' ]]; then
+    exp_fac=0.05
+elif [[ ${drivers[i]} = 'Sarch' ]]; then
+    exp_fac=0.05
+else
+    exp_fac=0
+fi
 
 #################################################################
 ####################### Run the Script ##########################
 #################################################################
 
 #### Setup and Configure ####
-i=$((SGE_TASK_ID - 1))
 
 BASE_DIR=$HOME/GitHub/SWAT/Flux-Surfaces
 TMP_DIR=$(mktemp -d --tmpdir=/fastdata/smq11sjm/temp_run/)
 
-cp -r $BASE_DIR $TMP_DIR
-cd $TMP_DIR/Flux-Surfaces/
+#cp -r $BASE_DIR $TMP_DIR
+#cd $TMP_DIR/Flux-Surfaces/
 pwd
 
-echo ${periods[i]} ${amps[i]} "${fortamps[i]}"
-#./configure.py set driver --period=${periods[i]} --amp=${amps[i]} --fort_amp="${fortamps[i]}";
-./configure.py set driver --driver=${drivers[i]};
+echo ${drivers[i]} $exp_fac
+./configure.py set SAC --usr_script=${drivers[i]}
+./configure.py set driver --exp_fac=$exp_fac
 ./configure.py print;
 ./configure.py compile sac --clean;
 
+# Make directories
+mkdir -p `./configure.py get data_dir`
+mkdir -p `./configure.py get gdf_dir`
+mkdir -p `./configure.py get out_dir`
+
 #### Run SAC ####
-python ./run.py SAC --mpi
+#python ./run.py SAC --mpi
 
 #### Run the CODE! ####
 tube_radii=( 'r60' 'r30' 'r10' )
@@ -53,6 +66,6 @@ do
     python ./run.py analysis --mpi --tube-r=$tuber
 done
 ###### I Done it now ########
-rm -r $TMP_DIR
+rm -rf $TMP_DIR
 pushover -m "Job "${drivers[i]}" Complete"
 echo "Job "${drivers[i]}" Complete"

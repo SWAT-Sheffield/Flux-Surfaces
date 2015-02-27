@@ -1,0 +1,47 @@
+&testlist /
+&filelist
+
+    filenameini='/home/polaris_she1/shesm/data/ini/3D_tube_128_128_128_np020204.ini',
+	typefileini='binary'
+	fullgridini= T
+	fullgridout= T
+	filename='/nobackup/shesm/PaperExp/outs/3D_tube128_Slog_p180-0_A20r3_B0015.log'
+		'/nobackup/shesm/PaperExp/outs/3D_tube128_Slog_p180-0_A20r3_B0015.out'
+
+	typefileout='binary'
+	typefilelog='default'
+	
+/
+&savelist
+	dtsave=1.0,1.0
+	
+/
+&stoplist
+	tmax=600.0
+	itmax = 1000000
+/
+&testlist /
+
+&methodlist
+
+	wnames='h m1 m2 m3 e b1 b2 b3 eb rhob bg1 bg2 bg3'
+	typefull=	8*'cd4',5*'nul'
+    typeadvance=    'onestep'
+	typefilter=	13*'nul'
+	dimsplit=	F
+	sourcesplit=	F
+	divBfix=	F
+ /
+
+ &boundlist
+	typeB=	13*'fixed'
+		13*'fixed'
+		13*'fixed'
+		13*'fixed'
+				
+ /
+
+ &paramlist
+	courantpar=0.2
+
+ /

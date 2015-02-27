@@ -32,7 +32,7 @@
     DOUBLE PRECISION:: xc1Mm, xc2Mm, xc3Mm
     DOUBLE PRECISION:: xx, yy, zz
     DOUBLE PRECISION:: vvx(ixG^T), vvy(ixG^T), vvz(ixG^T)
-    DOUBLE PRECISION:: AA, B, ux, uy, phi, theta
+    DOUBLE PRECISION:: AA, B
     DOUBLE PRECISION:: delta_z, delta_x, delta_y, exp_x, exp_y, exp_z, exp_xyz, tdep
     !-----------------------------------------------------------------------------
 
@@ -61,20 +61,20 @@
     xxmax=2.d6
     yymax=2.d6
     zzmax=1.6d6
-
+    
     !### DELTA_Z ###   
- delta_z = 0.05d6
+    delta_z=0.05d6
     !### DELTA_X ###
- delta_x = 0.5d6
+    delta_x=0.1d6
     !### DELTA_Y ###
- delta_y = 0.5d6
+    delta_y=0.1d6
 
     !### AMPLITUDE ###
-  AA = 10.d0
+    AA = 20.d0 / SQRT(3.d0)
     !### EXP_FAC ###
-  B = 0.05
+    B = 0.15
     !### PERIOD ###
-  s_period = 240.0
+    s_period = 180.0
 
     tdep=SIN(qt*2.d0*pi/s_period)
     {^IFMPI IF (ipe.EQ.0)} PRINT*, "tdep==",tdep
@@ -94,17 +94,10 @@
 
              exp_xyz=exp_x*exp_y*exp_z
              
-             theta = ATAN2(yy,xx)
-             phi = ATAN2(1.d0,B)
-             
+             vvx(ix_1,ix_2,ix_3) = ((B*1e6 * xx) / (xx**2 + yy**2) + yy/SQRT(xx**2 + yy**2)) * exp_xyz * tdep * AA
+             vvy(ix_1,ix_2,ix_3) = ((B*1e6 * yy) / (xx**2 + yy**2) - xx/SQRT(xx**2 + yy**2)) * exp_xyz * tdep * AA
 
-             ux = COS(theta + phi)
-             uy =  SIN(theta + phi)
-             
-             vvx(ix_1,ix_2,ix_3) = (ux / SQRT(ux**2 + uy**2)) * exp_xyz * tdep * AA
-             vvy(ix_1,ix_2,ix_3) = (uy / SQRT(ux**2 + uy**2)) * exp_xyz * tdep * AA
-
-          ENDDO
+           ENDDO
        ENDDO
     ENDDO
 
