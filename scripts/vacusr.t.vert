@@ -64,19 +64,22 @@
     yymax = 2.d6!MAXVAL(x(1,1,:,3)) !2.d6
     zzmax = 1.6d6!MAXVAL(x(:,1,1,1)) !2.d6
 
-    !Define FWHM of gaussian driver profile
-    delta_z = 0.05d6
-    delta_x = 0.1d6
-    delta_y = 0.1d6
+    !### DELTA_Z ###   
+    delta_z=0.05d6
+    !### DELTA_X ###
+    delta_x=0.1d6
+    !### DELTA_Y ###
+    delta_y=0.1d6
 
-    !Set Amplitude of Driver
-    !AA=80000.d0 ! ~2km/s hor/vert
-    AA = 10.d0
+    !### AMPLITUDE ###
+    AA = 20.d0 / SQRT(3.d0)
+    !### EXP_FAC ###
+    B = 0.15
+    !### PERIOD ###
+    s_period = 180.0
 
-    !Period of Driver
-    s_period = 30.d0
-
-    tdep=SIN(qt*2.d0*pi/s_period)!*EXP(-qt/(s_period)) 
+    tdep=SIN(qt*2.d0*pi/s_period)
+    {^IFMPI IF (ipe.EQ.0)} PRINT*, "tdep==",tdep
  
     DO ix_1 = ixImin1,ixImax1
        DO ix_2 = ixImin2,ixImax2
