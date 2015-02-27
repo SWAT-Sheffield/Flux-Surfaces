@@ -3,10 +3,11 @@
 Configure repository, configure and compile SAC and analysis
 
 Usage:
-    configure.py set SAC [--compiler=<compiler>] [--compiler_flags=<flg>] [--vac_modules=<mod>] [--runtime=<s>] [--mpi_config=<cfg>] [--varnames=<s>] [--grid_size=<grid_size]
-    configure.py set driver [--driver=<driver>] [--period=<s>] [--exp_fac=<exp>] [--amp=<amp_str>] [--fort_amp=<fort_amp>] [--delta_x=<delta_x>] [--delta_y=<delta_y>] [--delta_z=<delta_z>] [--identifier=<identifier>]
+    configure.py set SAC [--compiler=<compiler>] [--compiler_flags=<flg>] [--vac_modules=<mod>] [--runtime=<s>] [--mpi_config=<cfg>] [--varnames=<s>] [--grid_size=<grid_size>] [--usr_script=<usr>]
+    configure.py set driver [--period=<s>] [--exp_fac=<exp>] [--amp=<amp_str>] [--fort_amp=<fort_amp>] [--delta_x=<delta_x>] [--delta_y=<delta_y>] [--delta_z=<delta_z>] [--identifier=<identifier>]
     configure.py set analysis [--tube_radii=<radii>]
     configure.py set data [--ini_dir=<dir>] [--out_dir=<dir>] [--data_dir=<dir>] [--gdf_dir=<dir>]
+    configure.py get <key>
     configure.py print [<section>]
     configure.py compile SAC [--clean]
 
@@ -17,7 +18,8 @@ Options:
     --runtime=S  Physical time runtime of the simulation (in seconds)
     --mpi_config=CFG  The mpi conifg to use
     --varnames=NAMES  A list of physical varnames for all the varibles in w
-    --driver=DRI  The name of the driver
+    --grid_size=SIZE The grid size for each MPI processor including boundaries if fullgridini is True
+    --usr_script=USR The vacusr.t suffix, where the scripts are in scripts/
     --period=S  The driver period in seconds
     --exp_fac=E  The expqansion factor of the driver
     --amplitude=AMP  String representation of the driver ampliude
@@ -60,6 +62,9 @@ if arguments['set']:
     #Save the config file
     cfg.save_cfg()
 
+if arguments['get']:
+    print getattr(cfg, arguments['<key>'])
+
 if arguments['print']:
     if not arguments['<section>']:
         section = 'all'
@@ -68,7 +73,7 @@ if arguments['print']:
 
     cfg.print_config(section)
 
-driver = cfg.driver
+driver = cfg.usr_script
 period = cfg.period
 post_amp = cfg.amp
 exp_fac = cfg.str_exp_fac
@@ -99,13 +104,13 @@ if arguments['compile'] and arguments['SAC']:
     os.symlink(os.path.realpath('./scripts/vac_config.par'),
                os.path.realpath(sac_path('vac.par')))
 
-    check_file('src/vacusrpar.t.{}'.format(cfg.driver))
-    os.symlink(os.path.realpath('./scripts/vacusrpar.t.{}'.format(cfg.driver)),
-               sac_path('src/vacusrpar.t.{}'.format(cfg.driver)))
+    check_file('src/vacusrpar.t.{}'.format(cfg.usr_script))
+    os.symlink(os.path.realpath('./scripts/vacusrpar.t.{}'.format(cfg.usr_script)),
+               sac_path('src/vacusrpar.t.{}'.format(cfg.usr_script)))
 
-    check_file('src/vacusr.t.{}'.format(cfg.driver))
-    os.symlink(os.path.realpath('./scripts/vacusr.t.{}'.format(cfg.driver)),
-               sac_path('src/vacusr.t.{}'.format(cfg.driver)))
+    check_file('src/vacusr.t.{}'.format(cfg.usr_script))
+    os.symlink(os.path.realpath('./scripts/vacusr.t.{}'.format(cfg.usr_script)),
+               sac_path('src/vacusr.t.{}'.format(cfg.usr_script)))
 
     # Distribute ini file:
     os.chdir(cfg.ini_dir)
@@ -134,6 +139,8 @@ if arguments['compile'] and arguments['SAC']:
                                     "3D_tube128_%s.out'\n"%identifier)
         if line.strip().startswith("wnames="):
             f_lines[i] = '    ' + "wnames='" + ' '.join(cfg.varnames).encode('ascii') +"'\n"
+        if line.strip().startswith("tmax="):
+            f_lines[i] = '    ' + "tmax={0}".format(cfg.runtime)
     f.close()
 
     for i in range(len(f_lines)):
@@ -147,7 +154,7 @@ if arguments['compile'] and arguments['SAC']:
     #==============================================================================
     # Process vacusr.t.Slog
     #==============================================================================
-    source_file = sac_path('src/vacusr.t.{}'.format(cfg.driver))
+    source_file = sac_path('src/vacusr.t.{}'.format(cfg.usr_script))
     f = open(source_file, 'r')
     f_lines = f.readlines()
 

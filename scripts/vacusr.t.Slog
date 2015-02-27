@@ -63,18 +63,18 @@
     zzmax=1.6d6
 
     !### DELTA_Z ###   
-    delta_z=0.05d6
+ delta_z = 0.05d6
     !### DELTA_X ###
-    delta_x=0.1d6
+ delta_x = 0.5d6
     !### DELTA_Y ###
-    delta_y=0.1d6
+ delta_y = 0.5d6
 
     !### AMPLITUDE ###
-    AA = 20.d0 / SQRT(3.d0)
+  AA = 10.d0
     !### EXP_FAC ###
-    B = 0.15
+  B = 0.05
     !### PERIOD ###
-    s_period = 180.0
+  s_period = 240.0
 
     tdep=SIN(qt*2.d0*pi/s_period)
     {^IFMPI IF (ipe.EQ.0)} PRINT*, "tdep==",tdep

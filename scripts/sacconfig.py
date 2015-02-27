@@ -70,6 +70,14 @@ class SACConfig(object):
         self._mpi_config = self._get_value('SAC', 'mpi_config')
         return self._mpi_config
 
+    @property
+    def usr_script(self):
+        return self._get_value('SAC', 'usr_script')
+
+    @usr_script.setter
+    def usr_script(self, value):
+        self._set_value('SAC', 'usr_script', value)
+
     @mpi_config.setter
     def mpi_config(self, value):
         self._set_value('SAC', 'mpi_config', value)
@@ -100,14 +108,6 @@ class SACConfig(object):
 #==============================================================================
 #   Driver configs
 #==============================================================================
-    @property
-    def driver(self):
-        return self._get_value('driver', 'driver')
-
-    @driver.setter
-    def driver(self, value):
-        self._set_value('driver', 'driver', value)
-
     @property
     def period(self):
         self._period = float(self._get_value('driver', 'period'))
@@ -274,7 +274,7 @@ class SACConfig(object):
         id = ""
         for tag in self.identifier:
             x = getattr(self, tag)
-            id += "{}_".format(x)
+            id += "{0}_".format(x)
         return id[:-1]  # Last _ is not wanted
 
     def save_cfg(self):
@@ -307,6 +307,7 @@ class SACConfig(object):
             print "compiler:", self.compiler
             print "compiler_flags:", self.compiler_flags
             print "vacmodules:", self.vac_modules
+            print "usr_script:", self.usr_script
             print "runtime:", self.runtime
             print "mpi_config:", self.mpi_config
             print "grid_size:", self.grid_size
@@ -315,7 +316,6 @@ class SACConfig(object):
             print "-"*79
             print "Driver:"
             print "-"*79
-            print "driver:", self.driver
             print "period:", self.period
             print "exp_fac:", self.exp_fac
             print "amp:", self.amp

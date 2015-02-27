@@ -17,7 +17,7 @@ include 'vacpar.f'
 
 INTEGER,PARAMETER:: ixGlo^D=1
 ! The next line is edited by SETVAC
-INTEGER,PARAMETER:: ixGhi1=68,ixGhi2=68,ixGhi3=68,ixGhimin=68,ixGhimax=68
+INTEGER,PARAMETER:: ixGhi1=68,ixGhi2=68,ixGhi3=36,ixGhimin=36,ixGhimax=68
 INTEGER,PARAMETER:: ndim=^ND, ndir=^NC
 
 INTEGER,PARAMETER:: dixBlo=2,dixBhi=2
