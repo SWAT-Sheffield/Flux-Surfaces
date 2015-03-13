@@ -5,7 +5,7 @@
 #$ -l mem=6G
 #$ -pe openmpi-ib 16
 #$ -P mhd
-#$ -q mhd.q
+# -q mhd.q
 #$ -N driver_paper
 #$ -j y
 #$ -t 1 
@@ -56,7 +56,10 @@ mkdir -p `./configure.py get gdf_dir`
 mkdir -p `./configure.py get out_dir`
 
 #### Run SAC ####
-#python ./run.py SAC --mpi
+python ./run.py SAC --mpi
+
+### Run out - GDF Conversion ####
+python ./run.py gdf --mpi
 
 #### Run the CODE! ####
 tube_radii=( 'r60' 'r30' 'r10' )

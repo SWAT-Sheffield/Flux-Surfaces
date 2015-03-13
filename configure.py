@@ -135,7 +135,7 @@ if arguments['compile'] and arguments['SAC']:
         if line.strip().startswith("filename="):
             f_lines[i] = '    ' + "filename='" + os.path.join(out_dir,
                                     "3D_tube128_%s.log'\n"%identifier)
-            f_lines[i+1] = "        '" + os.path.join(out_dir,
+            f_lines[i+1] = "             '" + os.path.join(out_dir,
                                     "3D_tube128_%s.out'\n"%identifier)
         if line.strip().startswith("wnames="):
             f_lines[i] = '    ' + "wnames='" + ' '.join(cfg.varnames).encode('ascii') +"'\n"

@@ -14,11 +14,11 @@ import numpy as np
 import astropy.units as u
 from tvtk.api import tvtk
 from mayavi.tools.sources import vector_field
-import yt.mods as ytm
+import yt
 
 import pysac.io
+import pysac.yt
 import pysac.io.gdf_writer
-import pysac.io.yt_fields
 import pysac.analysis.tube3D.process_utils as util
 import pysac.analysis.tube3D.tvtk_tube_functions as ttf
 
@@ -74,16 +74,17 @@ def path_join(filename):
 # TimeSeries, data slices and other constants
 #==============================================================================
 #Create the yt time series
-ts = ytm.load(gdf_files)
-np.save(os.path.join(cfg.data_dir,'Times_{}.npy'.format(cfg.get_identifier())), [ds.current_time for ds in ts])
+#ts = yt.load(gdf_files)
+np.save(os.path.join(cfg.data_dir,'Times_{}.npy'.format(cfg.get_identifier())),
+        [pysac.yt.SACGDFDataset(fname).current_time for fname in gdf_files])
 #Define a var to limit iterations, no limt = len(ts)
-max_n = len(ts)
+max_n = 1#len(ts)
 
 top_cut = -5
 cube_slice = np.s_[:,:,:top_cut]
 x_slice = np.s_[:,:,:,:top_cut]
-ds = ts[0]
-cg = ds.h.grids[0]
+ds = pysac.yt.SACGDFDataset(gdf_files[0])
+cg = ds.index.grids[0]
 xmax, ymax, zmax = cg['density_pert'][cube_slice].shape #- 1# ts[0].domain_dimensions - 1
 #nlines is the number of fieldlines used in the surface
 n_lines = 100
@@ -96,10 +97,10 @@ line_n = 25
 # https://hub.yt-project.org/nb/jlrbq9
 #==============================================================================
 if rank == 0:
-    f = h5py.File(ts[0].parameter_filename)
+    f = h5py.File(gdf_files[0])
 
     save_times = []
-    xmax, ymax, zmax = ts[0].domain_dimensions - 1
+    xmax, ymax, zmax = ds.domain_dimensions - 1
     zmax += top_cut
     #nlines is the number of fieldlines used in the surface
     n_lines = 100
@@ -127,7 +128,7 @@ if rank == 0:
 
     for i in range(0,max_n):
         print i
-        f = h5py.File(ts[i].parameter_filename)
+        f = h5py.File(gdf_files[i])
         t1 = save_times[-1]
         t2 = f['simulation_parameters'].attrs['current_time']
         save_times.append(t2)
@@ -175,7 +176,8 @@ else:
 #==============================================================================
 # Begin Parallel compute
 #==============================================================================
-ds = ts[0]
+ds = pysac.yt.SACGDFDataset(gdf_files[0])
+#ds = ts[0]
 #Read in all data from hdf5 file
 bfield, vfield, density, valf, cs, beta = util.get_yt_mlab(ds, cube_slice, flux=True)
 
@@ -251,7 +253,8 @@ Fperp_avg = np.zeros([number_ind])
 Fphi_avg = np.zeros([number_ind])
 
 for i,n in enumerate(rank_indices):
-    ds = ts[n]
+    ds = pysac.yt.SACGDFDataset(gdf_files[n])
+    #ds = ts[n]
     [bfield, vfield, density,
      valf, cs, beta] = util.process_next_step_yt(ds, cube_slice, bfield, vfield,
                                                  density, valf, cs, beta)

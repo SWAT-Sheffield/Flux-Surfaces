@@ -62,8 +62,8 @@ if arguments['SAC'] == 'SAC':
 
 #Run gdf translator
 if arguments['gdf'] or arguments['SAC'] == 'gdf':
-    os.chdir("sac/sac")
-    mpi_exec(arguments, './out2gdf_pure.py')
+    os.chdir("scripts")
+    mpi_exec(arguments, 'python gdf_converter_mpi.py')
     os.chdir("../")
 
 #Run Analysis

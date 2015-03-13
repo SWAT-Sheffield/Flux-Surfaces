@@ -1,32 +1,27 @@
 &testlist /
 &filelist
-
     filenameini='/mnt/fastdata/smq11sjm/inidata/3D_tube_128_128_128_np020204.ini'
     typefileini='binary'
     fullgridini= T
     fullgridout= T
     filename='/mnt/fastdata/smq11sjm/Flux_Surfaces/outs/3D_tube128_Slog_p240-0_A10_B005.log'
-        '/mnt/fastdata/smq11sjm/Flux_Surfaces/outs/3D_tube128_Slog_p240-0_A10_B005.out'
+             '/mnt/fastdata/smq11sjm/Flux_Surfaces/outs/3D_tube128_Slog_p240-0_A10_B005.out'
 
     typefileout='binary'
     typefilelog='default'
     
 /
+
 &savelist
     dtsave=1.0,1.0
     
 /
-&stoplist
-    tmax=10&methodlist
 
-    wnames='h m1 m2 m3 e b1 b2 b3 eb rhob bg1 bg2 bg3'
-    typefull=   8*'cd4',5*'nul'
-    typeadvance=    'onestep'
-    typefilter= 13*'nul'
-    dimsplit=   F
+&stoplist
+    tmax=600    dimsplit=   F
     sourcesplit=    F
     divBfix=    F
- /
+/
 
  &boundlist
     typeB=  13*'fixed'
@@ -34,9 +29,9 @@
             13*'fixed'
             13*'fixed'
                 
- /
+/
 
  &paramlist
     courantpar=0.2
 
- /
+/
