@@ -140,7 +140,7 @@ if arguments['compile'] and arguments['SAC']:
         if line.strip().startswith("wnames="):
             f_lines[i] = '    ' + "wnames='" + ' '.join(cfg.varnames).encode('ascii') +"'\n"
         if line.strip().startswith("tmax="):
-            f_lines[i] = '    ' + "tmax={0}".format(cfg.runtime)
+            f_lines[i] = '    ' + "tmax={0}\n".format(cfg.runtime)
     f.close()
 
     for i in range(len(f_lines)):

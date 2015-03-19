@@ -78,7 +78,7 @@ def path_join(filename):
 np.save(os.path.join(cfg.data_dir,'Times_{}.npy'.format(cfg.get_identifier())),
         [pysac.yt.SACGDFDataset(fname).current_time for fname in gdf_files])
 #Define a var to limit iterations, no limt = len(ts)
-max_n = 1#len(ts)
+max_n = 16#len(ts)
 
 top_cut = -5
 cube_slice = np.s_[:,:,:top_cut]
@@ -185,10 +185,10 @@ bpert = util.yt_to_mlab_vector(ds,
                                'mag_field_x_pert',
                                'mag_field_y_pert',
                                'mag_field_z_pert',
-                               cube_slice, SI_scale=1e-4,
+                               cube_slice,
                                field_name="Magnetic Pertubation")
 
-f_wave = pysac.analysis.get_wave_flux_yt(ds, B_to_SI=1e-4, V_to_SI=1e-2, Pk_to_SI=1e-1)
+f_wave = pysac.analysis.get_wave_flux_yt(ds)  # , B_to_SI=1e-4, V_to_SI=1e-2, Pk_to_SI=1e-1)
 
 fwfield = vector_field(f_wave[0,:,:,:][cube_slice],
                        f_wave[1,:,:,:][cube_slice],
@@ -263,7 +263,7 @@ for i,n in enumerate(rank_indices):
                                           'mag_field_x_pert',
                                           'mag_field_y_pert',
                                           'mag_field_z_pert',
-                                          cube_slice, SI_scale=1e-4)
+                                          cube_slice)
     #Update surface
     ttf.update_flux_surface(surf_seeds[n], surf_field_lines, surface)
     #Get velocities at surface
@@ -339,7 +339,7 @@ for i,n in enumerate(rank_indices):
 #==============================================================================
 # Wave Flux
 #==============================================================================
-    f_wave = pysac.analysis.get_wave_flux_yt(ds, B_to_SI=1e-4, V_to_SI=1e-2, Pk_to_SI=1e-1)
+    f_wave = pysac.analysis.get_wave_flux_yt(ds)  # , B_to_SI=1e-4, V_to_SI=1e-2, Pk_to_SI=1e-1)
 
     fwfield.set(vector_data = np.rollaxis(np.array([f_wave[0,:,:,:][cube_slice],
                                                     f_wave[1,:,:,:][cube_slice],
@@ -380,17 +380,25 @@ for i,n in enumerate(rank_indices):
     new_name = fprefix + '_fwave' + fnumber + ext
 
     f = h5py.File(new_name, mode='w')
-    f = pysac.io.gdf_writer.create_file(f,
-                                        {'ndim':3, 'nx':ds.domain_dimensions, 't': ds.current_time},
-                                        domain_left_edge=ds.domain_left_edge,
-                                        domain_right_edge=ds.domain_right_edge)
+    simulation_params = pysac.io.gdf_writer.SimulationParameters()
+    simulation_params['dimensionality'] = 3
+    simulation_params['domain_dimensions'] = ds.domain_dimensions
+    simulation_params['current_time'] = ds.current_time
+    simulation_params['domain_left_edge'] = ds.domain_left_edge
+    simulation_params['domain_right_edge'] = ds.domain_right_edge
+    simulation_params['num_ghost_zones'] = [0]
+    simulation_params['field_ordering'] = 0
+    simulation_params['boundary_conditions'] = np.zeros([6], dtype=int)+2
+
+    f = pysac.io.gdf_writer.create_file(f, simulation_params, ds.domain_dimensions,
+                                        data_author="Flux-Surfaces")
 
     fwave_x = u.Quantity(f_wave[0,:,:,:], unit='W/m2')
-    pysac.io.gdf_writer.write_field_u(f, fwave_x, 'wave_flux_x', 'x Compoment of Wave Energy Flux')
+    pysac.io.gdf_writer.write_field(f, fwave_x, 'wave_flux_x', 'x Compoment of Wave Energy Flux')
     fwave_y = u.Quantity(f_wave[1,:,:,:], unit='W/m2')
-    pysac.io.gdf_writer.write_field_u(f, fwave_y, 'wave_flux_y', 'y Compoment of Wave Energy Flux')
+    pysac.io.gdf_writer.write_field(f, fwave_y, 'wave_flux_y', 'y Compoment of Wave Energy Flux')
     fwave_z = u.Quantity(f_wave[2,:,:,:], unit='W/m2')
-    pysac.io.gdf_writer.write_field_u(f, fwave_z, 'wave_flux_z', 'z Compoment of Wave Energy Flux')
+    pysac.io.gdf_writer.write_field(f, fwave_z, 'wave_flux_z', 'z Compoment of Wave Energy Flux')
     f.close()
 
     print "%i: Done Flux %i \n%i: Step %i / %i"%(rank,n,rank,i,len(rank_indices))

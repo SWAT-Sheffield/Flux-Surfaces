@@ -56,17 +56,17 @@ mkdir -p `./configure.py get gdf_dir`
 mkdir -p `./configure.py get out_dir`
 
 #### Run SAC ####
-python ./run.py SAC --mpi
+time python ./run.py SAC --mpi
 
 ### Run out - GDF Conversion ####
-python ./run.py gdf --mpi
+time python ./run.py gdf --mpi
 
 #### Run the CODE! ####
 tube_radii=( 'r60' 'r30' 'r10' )
 for tuber in "${tube_radii[@]}"
 do
     echo $tuber
-    python ./run.py analysis --mpi --tube-r=$tuber
+    time python ./run.py analysis --mpi --tube-r=$tuber
 done
 ###### I Done it now ########
 rm -rf $TMP_DIR

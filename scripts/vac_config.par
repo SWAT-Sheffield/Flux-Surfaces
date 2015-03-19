@@ -18,9 +18,9 @@
 /
 
 &stoplist
-    tmax=600    dimsplit=   F
-    sourcesplit=    F
+    tmax=600
     divBfix=    F
+    sourcesplit=    F
 /
 
  &boundlist
