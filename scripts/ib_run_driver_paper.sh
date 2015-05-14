@@ -3,9 +3,9 @@
 #$ -cwd
 #$ -l arch=intel*
 #$ -l mem=6G
-#$ -pe openmpi-ib 16
+#$ -pe openmpi-ib 24
 #$ -P mhd
-# -q mhd.q
+#$ -q mhd.q
 #$ -N driver_paper
 #$ -j y
 #$ -t 1 
@@ -48,7 +48,7 @@ echo ${drivers[i]} $exp_fac
 ./configure.py set SAC --usr_script=${drivers[i]}
 ./configure.py set driver --exp_fac=$exp_fac
 ./configure.py print;
-./configure.py compile sac --clean;
+#./configure.py compile sac --clean;
 
 # Make directories
 mkdir -p `./configure.py get data_dir`
@@ -56,10 +56,10 @@ mkdir -p `./configure.py get gdf_dir`
 mkdir -p `./configure.py get out_dir`
 
 #### Run SAC ####
-time python ./run.py SAC --mpi
+#time python ./run.py SAC --mpi
 
 ### Run out - GDF Conversion ####
-time python ./run.py gdf --mpi
+#time python ./run.py gdf --mpi
 
 #### Run the CODE! ####
 tube_radii=( 'r60' 'r30' 'r10' )
