@@ -10,20 +10,22 @@
 #$ -j y
 
 #Set the Python virtualenv
-source ~/.bashrc
-workon vtk_hdf 
+module load apps/python/conda
+source activate mpi-sac
 
 #Load MPI modules
-module add mpi/pgi/openmpi/1.6.4
+module add mpi/gcc/openmpi/1.10.0
 
 echo "SAC will run on the following nodes"
 cat $PE_HOSTFILE
 
+echo "Working DIR:"
+echo $SGE_O_WORKDIR
+
 echo "Run SAC:"
-time python /home/smq11sjm/period-paper/run.py SAC --mpi
+#time python $SGE_O_WORKDIR/run.py SAC --mpi
 
 echo "Run GDF Translator:"
-time python /home/smq11sjm/period-paper/run.py gdf --mpi
+time python $SGE_O_WORKDIR/run.py gdf --mpi
 
 echo "Job Complete"
-/home/smq11sjm/.local/bin/pushover "Job Complete S3D_Slog"
