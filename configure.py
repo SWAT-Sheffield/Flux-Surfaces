@@ -96,7 +96,7 @@ def check_file(path):
         if os.path.islink(path):
             os.remove(path)
         else:
-            raise TypeError("{} is not a symlink, cannot safely remove".format(path))
+            raise TypeError("{0} is not a symlink, cannot safely remove".format(path))
 
 if arguments['compile'] and arguments['SAC']:
     # Get the template vac.par into place
@@ -104,22 +104,22 @@ if arguments['compile'] and arguments['SAC']:
     os.symlink(os.path.realpath('./scripts/vac_config.par'),
                os.path.realpath(sac_path('vac.par')))
 
-    check_file('src/vacusrpar.t.{}'.format(cfg.usr_script))
-    os.symlink(os.path.realpath('./scripts/vacusrpar.t.{}'.format(cfg.usr_script)),
-               sac_path('src/vacusrpar.t.{}'.format(cfg.usr_script)))
+    check_file('src/vacusrpar.t.{0}'.format(cfg.usr_script))
+    os.symlink(os.path.realpath('./scripts/vacusrpar.t.{0}'.format(cfg.usr_script)),
+               sac_path('src/vacusrpar.t.{0}'.format(cfg.usr_script)))
 
-    check_file('src/vacusr.t.{}'.format(cfg.usr_script))
-    os.symlink(os.path.realpath('./scripts/vacusr.t.{}'.format(cfg.usr_script)),
-               sac_path('src/vacusr.t.{}'.format(cfg.usr_script)))
+    check_file('src/vacusr.t.{0}'.format(cfg.usr_script))
+    os.symlink(os.path.realpath('./scripts/vacusr.t.{0}'.format(cfg.usr_script)),
+               sac_path('src/vacusr.t.{0}'.format(cfg.usr_script)))
 
     # Distribute ini file:
     os.chdir(cfg.ini_dir)
     if not os.path.isfile('3D_tube_128_128_128.ini'):
         raise ValueError("No initial conditions found, please download with ./run.py download ini")
     else:
-        if not len(glob.glob('3D_tube_128_128_128_{}_*.ini'.format(cfg.mpi_config))) == 16:
+        if not len(glob.glob('3D_tube_128_128_128_{0}_*.ini'.format(cfg.mpi_config))) == 16:
             print "Distributing ini file..."
-            os.system('{} 3D_tube_128_128_128.ini 3D_tube_128_128_128_{}.ini'.format(sac_path('distribution'),
+            os.system('{0} 3D_tube_128_128_128.ini 3D_tube_128_128_128_{0}.ini'.format(sac_path('distribution'),
                                                                                  cfg.mpi_config))
     os.chdir(root_path)
     #==============================================================================
@@ -131,7 +131,7 @@ if arguments['compile'] and arguments['SAC']:
     for i,line in enumerate(f_lines):
         if line.strip().startswith("filenameini="):
             f_lines[i] = '    ' + "filenameini='" + os.path.join(cfg.ini_dir,
-                                        "3D_tube_128_128_128_{}.ini'\n".format(cfg.mpi_config))
+                                        "3D_tube_128_128_128_{0}.ini'\n".format(cfg.mpi_config))
         if line.strip().startswith("filename="):
             f_lines[i] = '    ' + "filename='" + os.path.join(out_dir,
                                     "3D_tube128_%s.log'\n"%identifier)
@@ -154,17 +154,17 @@ if arguments['compile'] and arguments['SAC']:
     #==============================================================================
     # Process vacusr.t.Slog
     #==============================================================================
-    source_file = sac_path('src/vacusr.t.{}'.format(cfg.usr_script))
+    source_file = sac_path('src/vacusr.t.{0}'.format(cfg.usr_script))
     f = open(source_file, 'r')
     f_lines = f.readlines()
 
     for i,line in enumerate(f_lines):
         if line.strip() == "!### DELTA_X ###":
-            f_lines[i+1] = ' delta_x = {}d6\n'.format(cfg.delta_x)
+            f_lines[i+1] = ' delta_x = {0}d6\n'.format(cfg.delta_x)
         if line.strip() == "!### DELTA_Y ###":
-            f_lines[i+1] = ' delta_y = {}d6\n'.format(cfg.delta_y)
+            f_lines[i+1] = ' delta_y = {0}d6\n'.format(cfg.delta_y)
         if line.strip() == "!### DELTA_Z ###":
-            f_lines[i+1] = ' delta_z = {}d6\n'.format(cfg.delta_z)
+            f_lines[i+1] = ' delta_z = {0}d6\n'.format(cfg.delta_z)
         if line.strip() == "!### AMPLITUDE ###":
             f_lines[i+1] = '  AA = %s\n'%cfg.fort_amp
         if line.strip() == "!### PERIOD ###":
@@ -183,7 +183,7 @@ if arguments['compile'] and arguments['SAC']:
     #==============================================================================
     #Compile VAC
     os.chdir(sac_path("src"))
-    os.system('./setvac -u=Slog -p=mhd -d=33 -g={} -on=mpi'.format(cfg.grid_size))
+    os.system('./setvac -u=Slog -p=mhd -d=33 -g={0} -on=mpi'.format(cfg.grid_size))
     os.system('./setvac -s')
     if arguments['--clean']:
         os.system('./sac_fabricate.py --clean')
