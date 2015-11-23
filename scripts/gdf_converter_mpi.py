@@ -49,11 +49,11 @@ def get_header_fields(vfile):
 #    header['varnames'] = cfg.varnames
 #    indices = range(0,len(header['varnames']))
 #    w_ = dict(zip(header['varnames'],indices))
-#    
+#
     #Convert w
     w = mag_convert(vfile.w, vfile.w_)
     fields = convert_w_3D(np.ascontiguousarray(w), vfile.w_)
-    
+
     for field in fields.values():
         unit = field['field'].unit
         x = np.ascontiguousarray(np.rollaxis(np.array(field['field']),0,3))
@@ -78,14 +78,14 @@ coords = np.zeros(3)
 if rank < n0:
     coords[0] = rank
 elif (rank == n0):
-    coords[1] = 1 
+    coords[1] = 1
 elif rank < (n0 + n1):
     coords[0] = rank - n0
     coords[1] = rank - n1
 else:
     coords[2] = rank / (n0 * n1)
     rank2 = rank - (coords[2] * n2)
-    
+
     if rank2 < n0:
         coords[0] = rank2
     elif rank2 == n0:
@@ -124,7 +124,7 @@ else:
 # Transfer the C order X array to all ranks
 x = comm.bcast(x_xyz, root=0)
 # Make it a quantity.
-x *= u.meter
+x = u.Quantity(x, u.meter)
 
 #==============================================================================
 # Save a gdf file
@@ -141,5 +141,5 @@ for i in range(0,vfile.num_records,1):
 
     write_gdf(f, header, x, fields, arr_slice=arr_slice,
               data_author = "Stuart Mumford",
-              data_comment = "Converted from outfiles in parallel", collective=True)
+              data_comment = "Converted from outfiles in parallel", collective=False)
 print "rank %i finishes"%rank
